@@ -1,9 +1,12 @@
+from datetime import datetime
 from flask import request, Blueprint, jsonify
 from PyPDF2 import * 
 import io
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
+
+from db import *
 
 load_dotenv()
 
@@ -14,13 +17,6 @@ api = Blueprint('api', __name__)
 # temp data storage
 resume_text = ""
 
-@api.route("/resume", methods=['POST'])
-def uploadFile():
-    file = request.data
-    reader = PdfReader(io.BytesIO(file))
-    text = reader.pages[0].extract_text()
-    resume_text = text
-    return resume_text
 
 @api.route("/questions", methods=['GET'])
 def getQuestions():
@@ -36,3 +32,25 @@ def getQuestions():
     completion_text = completion.choices[0].message.content
 
     return  jsonify({"questions": completion_text})
+
+
+# add User
+@api.route("/addUser", methods=['POST'])
+def addUser():
+    data = request.get_json()
+    new_user = {
+        'googleId':data['googleId'],
+        'name':data['name'],
+        'email':data['email'],
+        'create_date': datetime.now()
+    }
+    createUser(new_user)
+    return jsonify({'message':'User added successfully'})
+
+# get user by Token
+@api.route("/<string:googleId>", methods=['GET'])
+def getUser(googleId):
+    user = readUserByGoogleId(googleId)
+    if user:
+        return jsonify(user)
+    return jsonify({'message': 'User does not exist'})

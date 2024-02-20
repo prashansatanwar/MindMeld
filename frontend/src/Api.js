@@ -2,7 +2,36 @@ import axios from "axios";
 
 const URL="http://127.0.0.1:5000"
 
-export async function uploadFile(file) {
+// User signup
+export async function userSignup(userData) {
+    var config = {
+        method: 'POST',
+        url: URL + '/addUser',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        data:userData
+    };
+
+    try {
+        const response = await axios(config);
+        return response.data;
+    }
+    catch(error) {
+        console.log(error);
+    }
+}
+
+// User login
+export async function userlogin(googleId) {
+    return await axios 
+            .get(URL+'/'+googleId)
+            .then((res) => res.data)
+            .catch((err) => console.log(err));
+}
+
+// Upload file
+export async function uploadFile(file, googleId) {
     var config = {
         method: 'POST',
         url: URL + '/resume',
@@ -14,7 +43,6 @@ export async function uploadFile(file) {
 
     try {
         const response = await axios(config);
-        // console.log(JSON.stringify(response.data));
         return response.data;
     } catch (error) {
         console.log(error);
