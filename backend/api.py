@@ -1,8 +1,9 @@
 from datetime import datetime
-from flask import request, Blueprint, jsonify
+from flask import request, Blueprint, jsonify, send_file
 from PyPDF2 import * 
 import io
 import os
+import base64
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -54,3 +55,35 @@ def getUser(googleId):
     if user:
         return jsonify(user)
     return jsonify({'message': 'User does not exist'})
+
+# upload resume
+@api.route("/<string:googleId>/resume", methods=['POST'])
+def uploadResume(googleId):
+    file = request.files['file']
+    uploadFile(file, googleId)
+    
+    return jsonify({'message': 'Resume uploaded successfully'})
+
+# delete resume
+@api.route("/<string:googleId>/resume/<string:fileId>", methods=['DELETE'])
+def deleteResume(googleId, fileId):
+    try:
+        deleteFile(fileId, googleId)
+        return jsonify({'message': 'Resume deleted successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+# get resume
+@api.route("/<string:googleId>/resume/<string:fileId>", methods=['GET'])
+def getResume(googleId,fileId):
+    try:
+        file = readFileByFileId(fileId)
+        if file:
+            filename = file.filename
+            file_content = base64.b64encode(file.read()).decode('utf-8')
+            
+            return jsonify({'filename': filename, 'content': file_content})
+        else:
+            return jsonify({'message': 'File not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

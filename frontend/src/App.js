@@ -115,7 +115,7 @@ function App() {
         {!isLoggedIn && <Route exact path='/login' element={<Login GoogleSignInButton={GoogleSignInButton} GoogleSignOutButton={GoogleSignOutButton} isLoggedIn={isLoggedIn} />}/> }
         {isLoggedIn && (
             <>
-                <Route exact path='/' element={<Home />} />
+                <Route exact path='/' element={<Home user={user} />} />
                 <Route exact path='/dashboard' element={<Dashboard user={user} />} />
             </>
         )}

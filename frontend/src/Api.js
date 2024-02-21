@@ -1,12 +1,12 @@
 import axios from "axios";
 
-const URL="http://127.0.0.1:5000"
+const API_URL="http://127.0.0.1:5000"
 
 // User signup
 export async function userSignup(userData) {
     var config = {
         method: 'POST',
-        url: URL + '/addUser',
+        url: API_URL + '/addUser',
         headers: {
             'Content-Type': 'application/json'
         },
@@ -25,34 +25,63 @@ export async function userSignup(userData) {
 // User login
 export async function userlogin(googleId) {
     return await axios 
-            .get(URL+'/'+googleId)
+            .get(API_URL+'/'+googleId)
             .then((res) => res.data)
             .catch((err) => console.log(err));
 }
 
-// Upload file
+// Upload Resume
 export async function uploadFile(file, googleId) {
+    const formData = new FormData();
+    formData.append('file',file,file.name)
+
     var config = {
         method: 'POST',
-        url: URL + '/resume',
+        url: API_URL +"/"+ googleId +'/resume',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'multipart/form-data'
         },
-        data: file
+        data: formData
     };
+
+    console.log(file)
 
     try {
         const response = await axios(config);
         return response.data;
     } catch (error) {
-        console.log(error);
+        console.error('Error uploading file:', error);
+        throw error;
     }
+}
+
+// Read Resume
+export async function getFile(googleId, fileId) {
+    try {
+        const response = await axios.get(`${API_URL}/${googleId}/resume/${fileId}`);
+        console.log(response.data)
+        const fileUrl = URL.createObjectURL(new Blob([response.data.content],{type:'application/pdf'}));
+        return response.data;
+
+    } catch (error) {
+        console.log('Error fetching file:', error);
+        throw error;
+    }
+}
+
+// Delete Resume
+export async function deleteFile(googleId,fileId) {
+    return await axios
+                .delete(API_URL+"/"+googleId+'/resume/'+fileId)
+                .then((res) => res.data)
+                .catch((err) => console.log(err))
+
 }
 
 export async function getQuestions() {
     try {
         const res = await axios
-            .get(URL + '/questions');
+            .get(API_URL + '/questions');
         return res.data;
     } catch (err) {
         return console.log(err);

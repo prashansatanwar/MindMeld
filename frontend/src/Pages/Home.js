@@ -1,25 +1,48 @@
 import React, { useEffect, useState } from 'react'
-import { getQuestions, uploadFile } from '../Api';
+import { getQuestions, uploadFile, getFile } from '../Api';
 import { Document, Page } from 'react-pdf';
 
-function Home() {
+function Home({user}) {
+  console.log(user)
   const [file, setFile] = useState(null);
-  const [questions, setQuestions] = useState([]);
-  const [resumeData, setResumeData] = useState("");
+  // const [questions, setQuestions] = useState([]);
+  // const [resumeData, setResumeData] = useState("");
+  const [uploadedFile, setUploadedFile] = useState();
   const [url, setUrl] = useState('');
+
+  
 
   function handleFileChange(e) {
     setFile(e.target.files[0]);
   }
 
   useEffect(() => {
+      const fetchData = async () => {
+          if (user.fileId) {
+              try {
+                  const response = await getFile(user.googleId, user.fileId);
+                  setUploadedFile(response);
+              } catch (error) {
+                  console.error('Error fetching file:', error);
+              }
+          }
+      };
+
+      fetchData();
+
+      console.log(uploadedFile)
+  }, [user.fileId, user.googleId]);
+
+
+  useEffect(() => {
+    console.log(file)
     file && setUrl(URL.createObjectURL(file))
   }, [file]);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    await uploadFile(file).then((res) => {
-      setResumeData(res.data)
+    await uploadFile(file,user.googleId).then((res) => {
+      console.log(res)
     })
 
     // await getQuestions().then((res) => {
@@ -27,19 +50,6 @@ function Home() {
     // })
 
   }
-
-  // const PDFViewer = () => {
-  //     const pdfURL = url;
-  //     return (
-  //       <div>
-  //       {/* <Document file={pdfURL}>
-  //         <Page pageNumber={1} />
-  //       </Document> */}
-
-  //         <iframe src={pdfURL} className='h-full w-full ' />
-  //       </div>
-  //       );
-  //   };
 
   return (
     <div className='bg-slate-950 text-white h-screen w-full flex justify-center items-center flex flex-col py-20'>
@@ -75,6 +85,14 @@ function Home() {
               {url 
                 ? <iframe src={url} className='h-full w-full' />
                 : <div> No file chosen </div>}
+            </div>
+        </div>
+
+        <div className='flex-grow w-[95%]  px-8 text-left text-white'>
+            <div className='bg-slate-800 h-full p-4 rounded'>
+              {uploadedFile 
+                ? <iframe src={`data:application/pdf;base64,${uploadedFile.content}`} className='h-full w-full' />
+                : <div> No file uploaded </div>}
             </div>
         </div>
       
