@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 from flask import request, Blueprint, jsonify, send_file
 from PyPDF2 import * 
 import io
@@ -6,6 +7,7 @@ import os
 import base64
 from dotenv import load_dotenv
 from openai import OpenAI
+import re
 
 from db import *
 
@@ -15,24 +17,51 @@ client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 api = Blueprint('api', __name__)
 
-# temp data storage
-resume_text = ""
-
-
-@api.route("/questions", methods=['GET'])
-def getQuestions():
-    print(resume_text)
+@api.route("/<string:googleId>/resume/<string:fileId>/questions", methods=['GET'])
+def getQuestions(googleId,fileId):
+    file = readFileByFileId(fileId)
+    reader = PdfReader(io.BytesIO(file.read()))
+    text = reader.pages[0].extract_text()
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are an Interviewer. Generate 5 technical interview questions based on the resume transcript provided. The questions should be returned in an array format. The questions should be technical questions and not be generic questions. Ensure the questions do not have more than 10 words and are in context to the resume."},
-            {"role": "user", "content": resume_text}
+            {"role": "system", "content": "You are an Interviewer. Generate 2 technical interview questions based on the resume transcript provided. The questions should be returned in an array format. The questions should be technical questions and not be generic questions. Ensure the questions do not have more than 10 words and are in context to the resume."},
+            {"role": "user", "content": text}
         ]
     )
 
     completion_text = completion.choices[0].message.content
+    questions = re.findall(r'"([^"]*)"', ''.join(completion_text))
+    print(questions)
 
-    return  jsonify({"questions": completion_text})
+    return  jsonify({"questions": questions})
+
+@api.route("/<string:fileId>/analyzeResponse", methods=['POST'])
+def analyzeResponse(fileId):
+    req = request.get_json()
+    file = readFileByFileId(fileId)
+    reader = PdfReader(io.BytesIO(file.read()))
+    resume_transcript = reader.pages[0].extract_text()
+    data = {
+        'questions':req['questions'],
+        'answers':req['answers'],
+        'resume_transcript': resume_transcript
+    }
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are an Interviewer. You've asked the given questions, analyze the answers and give an appropriate specific feedback. Make sure the feedback is returned in an array format respectively."},
+            {"role": "user", "content": json.dumps(data)}
+        ]
+    )
+
+    completion_text = completion.choices[0].message.content
+    print(completion_text)
+
+    response = re.findall(r'"([^"]*)"', ''.join(completion_text))
+
+
+    return jsonify({"feedback": response})
 
 
 # add User
@@ -43,6 +72,7 @@ def addUser():
         'googleId':data['googleId'],
         'name':data['name'],
         'email':data['email'],
+        'fileId': '',
         'create_date': datetime.now()
     }
     createUser(new_user)
@@ -81,7 +111,7 @@ def getResume(googleId,fileId):
         if file:
             filename = file.filename
             file_content = base64.b64encode(file.read()).decode('utf-8')
-            
+
             return jsonify({'filename': filename, 'content': file_content})
         else:
             return jsonify({'message': 'File not found'}), 404

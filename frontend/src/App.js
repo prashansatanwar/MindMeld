@@ -9,7 +9,7 @@ import Home from './Pages/Home';
 import Login from './Pages/Login';
 import Navbar from './Components/Navbar';
 import { userSignup, userlogin } from './Api';
-import Dashboard from './Pages/Dashboard';
+import Analyzer from './Pages/Analyzer';
 
 function App() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -38,6 +38,7 @@ function App() {
     // Function to retrieve user data from local storage when the component mounts
     const checkUserDataOnMount = () => {
         const userData = localStorage.getItem('userData');
+        console.log(localStorage)
         if (userData) {
             setUser(JSON.parse(userData));
             setIsLoggedIn(true);
@@ -115,8 +116,8 @@ function App() {
         {!isLoggedIn && <Route exact path='/login' element={<Login GoogleSignInButton={GoogleSignInButton} GoogleSignOutButton={GoogleSignOutButton} isLoggedIn={isLoggedIn} />}/> }
         {isLoggedIn && (
             <>
-                <Route exact path='/' element={<Home user={user} />} />
-                <Route exact path='/dashboard' element={<Dashboard user={user} />} />
+                <Route exact path='/' element={<Home user={user} setUser={setUser}/>} />
+                <Route exact path='/analyzer' element={<Analyzer user={user} />} />
             </>
         )}
       </Routes>

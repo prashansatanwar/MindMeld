@@ -23,7 +23,6 @@ fs = GridFS(db)
 
 # create user 
 def createUser(user_data):
-    
     users_collection.insert_one(user_data)
 
 # read user by googleId
@@ -49,6 +48,12 @@ def deleteUser(googleId):
 # upload file
 def uploadFile(file, googleId):
     print("filename",file.filename)
+
+    user = readUserByGoogleId(googleId)
+
+    if(user['fileId'] != ''):
+        deleteFile(user['fileId'], googleId)
+
     file_content = file.read()
     file_bytes = io.BytesIO(file_content)
     fileId = fs.put(file_bytes, filename=file.filename, contentType=file.content_type)

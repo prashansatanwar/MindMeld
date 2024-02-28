@@ -30,6 +30,14 @@ export async function userlogin(googleId) {
             .catch((err) => console.log(err));
 }
 
+// getUser
+export async function getUser(googleId) {
+    return await axios 
+            .get(API_URL+'/'+googleId)
+            .then((res) => res.data)
+            .catch((err) => console.log(err));
+}
+
 // Upload Resume
 export async function uploadFile(file, googleId) {
     const formData = new FormData();
@@ -60,7 +68,7 @@ export async function getFile(googleId, fileId) {
     try {
         const response = await axios.get(`${API_URL}/${googleId}/resume/${fileId}`);
         console.log(response.data)
-        const fileUrl = URL.createObjectURL(new Blob([response.data.content],{type:'application/pdf'}));
+        // const fileUrl = URL.createObjectURL(new Blob([response.data.content],{type:'application/pdf'}));
         return response.data;
 
     } catch (error) {
@@ -78,12 +86,32 @@ export async function deleteFile(googleId,fileId) {
 
 }
 
-export async function getQuestions() {
+export async function getQuestions(googleId, fileId) {
     try {
         const res = await axios
-            .get(API_URL + '/questions');
+            .get(API_URL+"/"+googleId+'/resume/'+fileId + '/questions');
+        console.log(res.data)
         return res.data;
     } catch (err) {
         return console.log(err);
+    }
+}
+
+export async function analyzeResponse(fileId, data) {
+    var config = {
+        method: 'POST',
+        url: API_URL + `/${fileId}/analyzeResponse`,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        data:data
+    };
+
+    try {
+        const response = await axios(config);
+        return response.data;
+    }
+    catch(error) {
+        console.log(error);
     }
 }
