@@ -25,7 +25,7 @@ def getQuestions(googleId,fileId):
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are an Interviewer. Generate 2 technical interview questions based on the resume transcript provided. The questions should be returned in an array format. The questions should be technical questions and not be generic questions. Ensure the questions do not have more than 10 words and are in context to the resume."},
+            {"role": "system", "content": "You are an Interviewer. Generate 5 technical interview questions based on the resume transcript provided. The questions should be returned in an array format. The questions should be technical questions and not be generic questions. Ensure the questions do not have more than 10 words and are in context to the resume."},
             {"role": "user", "content": text}
         ]
     )
@@ -44,22 +44,20 @@ def analyzeResponse(fileId):
     resume_transcript = reader.pages[0].extract_text()
     data = {
         'questions':req['questions'],
-        'answers':req['answers'],
+        'response':req['answers'],
         'resume_transcript': resume_transcript
     }
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are an Interviewer. You've asked the given questions, analyze the answers and give an appropriate specific feedback. Make sure the feedback is returned in an array format respectively."},
+            {"role": "system", "content": "You are conducting an interview. After asking the provided questions, evaluate the candidate's response provided and provide detailed feedback for each answer. Ensure the feedback is specific and constructive, and return it in an array format corresponding to the questions. Make sure you only return the feedback."},
             {"role": "user", "content": json.dumps(data)}
         ]
     )
 
     completion_text = completion.choices[0].message.content
-    print(completion_text)
-
     response = re.findall(r'"([^"]*)"', ''.join(completion_text))
-
+    print(response)
 
     return jsonify({"feedback": response})
 
