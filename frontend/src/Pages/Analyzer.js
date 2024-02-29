@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { analyzeResponse, getQuestions } from '../Api';
+import { useAnalyzeResume } from '../Components/AnalyzeResumeContext';
 
 function Analyzer({user}) {
     const [questions, setQuestions] = useState([]);
@@ -9,11 +10,25 @@ function Analyzer({user}) {
 
     const [loading, setLoading] = useState(false);
 
+    
+  const isEffectTriggered = useRef(false);
+
+    const { analyzeResumeClicked, setAnalyzeResumeClicked } = useAnalyzeResume();
+
+    useEffect(() => {
+        if(analyzeResumeClicked && !isEffectTriggered.current) {
+            isEffectTriggered.current = true;
+            setAnalyzeResumeClicked(false);
+            getQ();
+        }
+    },[analyzeResumeClicked])
+
     async function getQ() {
         setLoading(true);
         await getQuestions(user.googleId, user.fileId).then((res) => {
             setQuestions(res.questions);
             setAnswers(Array(questions.length).fill(''))
+            setResponse([]);
         })
 
         setDisable(true);
@@ -30,6 +45,7 @@ function Analyzer({user}) {
         setLoading(true);
         await analyzeResponse(user.fileId, {'questions':questions, 'answers':answers}).then((res) => {
             setResponse(res.feedback);
+            console.log(res)
         })
         setLoading(false);
     }
@@ -40,7 +56,7 @@ function Analyzer({user}) {
             <div className='text-4xl text-left p-4'> Hello, {user.name}</div>
 
             <div className='p-4 text-left '>
-                <button onClick={getQ} className='bg-green-700 p-2 w-1/5 rounded'> Analyze Resume </button>
+                <button onClick={getQ} className='border-2 border-green-700 bg-green-700 uppercase font-bold text-sm p-2 px-4 rounded-lg hover:bg-green-800 w-1/5 rounded'> Analyze Resume </button>
 
                 <div className='pt-4'>
                     {loading && (
@@ -80,7 +96,7 @@ function Analyzer({user}) {
 
             </div>
             <div className='text-right'>
-                <button onClick={handleAnalyze} className={disable ? 'bg-green-700 p-2 w-1/5 rounded mx-2' : 'hidden'}> Analyze response </button>
+                <button onClick={handleAnalyze} className={disable ? 'border-2 border-green-700 bg-green-700 uppercase font-bold text-sm p-2 px-4 rounded-lg hover:bg-green-800 w-1/5 rounded mx-2' : 'hidden'}> Analyze response </button>
             </div>
 
 

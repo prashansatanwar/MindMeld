@@ -10,6 +10,7 @@ import Login from './Pages/Login';
 import Navbar from './Components/Navbar';
 import { userSignup, userlogin } from './Api';
 import Analyzer from './Pages/Analyzer';
+import { AnalyzeResumeProvider } from './Components/AnalyzeResumeContext';
 
 function App() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -100,27 +101,33 @@ function App() {
   const GoogleSignOutButton = () => {
       return (
           <GoogleLogout
-              clientId={process.env.REACT_APP_CLIENTID}
-              buttonText='LogOut'
-              onLogoutSuccess={handleLogout}
-              isSignedIn={isLoggedIn}
+            render={renderProps => (
+                <button className='uppercase font-bold text-sm py-1 px-2 border-2 border-red-800 rounded bg-red-800 hover:bg-red-900'
+                        onClick={renderProps.onClick}
+                        >Logout</button>
+            )}
+            clientId={process.env.REACT_APP_CLIENTID}
+            onLogoutSuccess={handleLogout}
+            isSignedIn={isLoggedIn}
           />
       );
   }
 
 
   return (  
-    <div className="App">
+    <div className="font-mono">
       {isLoggedIn && <Navbar GoogleSignOutButton={GoogleSignOutButton} />}
-      <Routes>
-        {!isLoggedIn && <Route exact path='/login' element={<Login GoogleSignInButton={GoogleSignInButton} GoogleSignOutButton={GoogleSignOutButton} isLoggedIn={isLoggedIn} />}/> }
-        {isLoggedIn && (
-            <>
-                <Route exact path='/' element={<Home user={user} setUser={setUser}/>} />
-                <Route exact path='/analyzer' element={<Analyzer user={user} />} />
-            </>
-        )}
-      </Routes>
+      <AnalyzeResumeProvider>
+        <Routes>
+            {!isLoggedIn && <Route exact path='/login' element={<Login GoogleSignInButton={GoogleSignInButton} GoogleSignOutButton={GoogleSignOutButton} isLoggedIn={isLoggedIn} />}/> }
+            {isLoggedIn && (
+                <>
+                    <Route exact path='/' element={<Home user={user} setUser={setUser}/>} />
+                    <Route exact path='/analyzer' element={<Analyzer user={user} />} />
+                </>
+            )}
+        </Routes>
+      </AnalyzeResumeProvider>
     </div>
   );
 }

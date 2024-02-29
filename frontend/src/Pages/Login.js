@@ -6,11 +6,13 @@ function Login(props) {
 
             <div className='w-full flex p-20'>
                 <div className='p-8 w-2/3 text-left'>
-                    <div className='text-6xl font-bold p-2'> 
+                    <div className='text-6xl font-bold p-1 font-megrim tracking-wider border-b-2 mb-5'> 
                         Mind Meld
                     </div>
-                    <div className='p-2'>
-                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Aspernatur, voluptate asperiores! Sint voluptatum blanditiis quis quidem ex quia molestias illo vel, animi praesentium maxime distinctio nihil at amet repellendus tempora!
+                    <div className='p-2 font-0'>
+                    Enhance interview skills with our app! Upload your resume, receive tailored questions, and practice responses like a real interview. 
+                    Our app analyzes your answers, providing valuable feedback for improvement. 
+                    Perfect for honing your skills and boosting confidence before the big day.
                     </div>
                 </div>
                 <div className='flex justify-center items-center'>
