@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {Route, Routes, useNavigate} from 'react-router-dom'
 
 import { gapi } from 'gapi-script'
-import GoogleLogin, { GoogleLogout } from 'react-google-login'
+import GoogleLogin, { GoogleLogout } from '@leecheuk/react-google-login'
 
 import './App.css';
 import Home from './Pages/Home';

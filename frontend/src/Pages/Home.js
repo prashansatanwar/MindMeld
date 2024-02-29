@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { getQuestions, uploadFile, getFile, deleteFile, getUser } from '../Api';
-import { Document, Page } from 'react-pdf';
 import Analyzer from './Analyzer';
 import { useNavigate } from 'react-router-dom';
 import { useAnalyzeResume } from '../Components/AnalyzeResumeContext';
