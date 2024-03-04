@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { getQuestions, uploadFile, getFile, deleteFile, getUser } from '../Api';
-import Analyzer from './Analyzer';
+import { uploadFile, getFile, getUser } from '../Api';
 import { useNavigate } from 'react-router-dom';
 import { useAnalyzeResume } from '../Components/AnalyzeResumeContext';
 
+import Loading from "../Components/Loading";
+
 function Home({user, setUser}) {
   const [file, setFile] = useState(null);
-  const [uploadedFile, setUploadedFile] = useState();
-  const [url, setUrl] = useState('');
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [url, setUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
 
@@ -19,27 +21,28 @@ function Home({user, setUser}) {
   }
 
   useEffect(() => {
-      const fetchData = async () => {
-          if (user.fileId) {
-              try {
-                  const response = await getFile(user.googleId, user.fileId);
-                  setUploadedFile(response);
-              } catch (error) {
-                  console.error('Error fetching file:', error);
-              }
-          }
-      };
-
-      fetchData();
-
-      console.log(uploadedFile)
-  }, [user.fileId, user.googleId]);
-
+    setIsLoading(true);
+    file && setUrl(URL.createObjectURL(file)) 
+    setIsLoading(false);
+  }, [file]);
 
   useEffect(() => {
-    console.log(file)
-    file && setUrl(URL.createObjectURL(file))
-  }, [file]);
+    setIsLoading(true);
+      const fetchData = async () => {
+        if (user.fileId) {
+          try {
+            const response = await getFile(user.googleId, user.fileId);
+            setUploadedFile(response);
+          } catch (error) {
+            console.error('Error fetching file:', error);
+          }
+        }
+        setIsLoading(false);
+      };
+      
+      fetchData();
+      console.log('after fetching data',isLoading)
+  }, [user.fileId, user.googleId]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -61,7 +64,8 @@ function Home({user, setUser}) {
   }
 
   function handleBack() {
-    setFile('');
+    setFile(null);
+    setUrl(null);
     window.location.reload();
   }
   
@@ -79,7 +83,7 @@ function Home({user, setUser}) {
               <div className='flex-grow flex'>
 
                 <input type='file' accept='pdf' className='custom-file-input' id='file-input' onChange={handleFileChange} />
-                <label className="custom-file-label border-2 border-blue-800 bg-blue-800 hover:bg-blue-900 px-2 m-2 rounded-lg" for="file-input">
+                <label className="custom-file-label border-2 border-blue-800 bg-blue-800 hover:bg-blue-900 px-2 m-2 rounded-lg" htmlFor="file-input">
                   <svg
                     aria-hidden="true"
                     focusable="false"
@@ -99,8 +103,8 @@ function Home({user, setUser}) {
                   {uploadedFile 
                     ? <span> {uploadedFile.filename }</span>
                     : file
-                    ? <span> {file.name} </span>
-                    : <span> Choose PDF file </span>}
+                      ? <span> {file.name} </span>
+                      : <span> Choose PDF file </span>}
                 </label>
               </div>
 
@@ -127,11 +131,16 @@ function Home({user, setUser}) {
 
           <div className='flex-grow h-full text-left text-white'>
               <div className='bg-slate-800 h-full p-2 rounded'>
-                {uploadedFile 
-                  ? <iframe src={`data:application/pdf;base64,${uploadedFile.content}`} className='h-full w-full' />
-                  : (url 
-                    ? <iframe src={url} className='h-full w-full' />
-                    : <div> No file chosen or uploaded. </div>)}
+                {
+                  isLoading 
+                    ? <div className='h-full w-full flex items-center justify-center'><Loading/></div>
+                    : uploadedFile 
+                      ? <iframe src={`data:application/pdf;base64,${uploadedFile.content}`} className='h-full w-full' />
+                      : (url
+                        ? <iframe src={url} className='h-full w-full' />
+                        : <div> No file chosen or uploaded. </div>)
+
+                }
               </div>
           </div>
 
