@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import {Route, Routes, useNavigate} from 'react-router-dom'
+import { Route, Routes, useNavigate, Navigate } from 'react-router-dom'
 
 import { gapi } from 'gapi-script'
 import GoogleLogin, { GoogleLogout } from '@leecheuk/react-google-login'
@@ -11,18 +11,14 @@ import Navbar from './Components/Navbar';
 import { userSignup, userlogin } from './Api';
 import Analyzer from './Pages/Analyzer';
 import { AnalyzeResumeProvider } from './Components/AnalyzeResumeContext';
+import PrivateRoute from './Components/PrivateRoute';
+import PageNotFound from './Pages/PageNotFound';
 
 function App() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState();
     let navigate = useNavigate(); 
-
-    useEffect(() => {
-        const storedToken = localStorage.getItem('googleAuthToken');
-        if(storedToken) {
-            setIsLoggedIn(true);
-        }
-    }, []);
 
     function start() {
         gapi.client.init({
@@ -31,24 +27,17 @@ function App() {
         });
         
     };
-
+    
     useEffect(() => {
-        gapi.load('client:auth2',start);
-    }, []);
-
-    // Function to retrieve user data from local storage when the component mounts
-    const checkUserDataOnMount = () => {
+        const storedToken = localStorage.getItem('googleAuthToken');
         const userData = localStorage.getItem('userData');
         console.log(localStorage)
-        if (userData) {
+        if(storedToken && userData) {
             setUser(JSON.parse(userData));
             setIsLoggedIn(true);
         }
-    };
-
-    // Call checkUserDataOnMount when your component mounts
-    useEffect(() => {
-        checkUserDataOnMount();
+        setIsLoading(false);
+        gapi.load('client:auth2',start);
     }, []);
 
 
@@ -71,6 +60,7 @@ function App() {
             }
             localStorage.setItem('googleAuthToken', tokenId);
             setIsLoggedIn(true);
+            setIsLoading(false);
             navigate('/');
         } catch (error) {
             console.error('Error during login/signup:', error);
@@ -82,6 +72,7 @@ function App() {
         localStorage.removeItem('googleAuthToken');
         localStorage.removeItem('userData');
         setIsLoggedIn(false);
+        setIsLoading(false);
         console.log(localStorage);
         navigate('/login')
     };
@@ -103,8 +94,9 @@ function App() {
           <GoogleLogout
             render={renderProps => (
                 <button className='uppercase font-bold text-sm py-1 px-2 border-2 border-red-800 rounded bg-red-800 hover:bg-red-900'
-                        onClick={renderProps.onClick}
-                        >Logout</button>
+                        onClick={renderProps.onClick}>
+                    Logout
+                </button>
             )}
             clientId={process.env.REACT_APP_CLIENTID}
             onLogoutSuccess={handleLogout}
@@ -113,19 +105,33 @@ function App() {
       );
   }
 
-
   return (  
     <div className="font-mono">
       {isLoggedIn && <Navbar GoogleSignOutButton={GoogleSignOutButton} />}
       <AnalyzeResumeProvider>
         <Routes>
-            {!isLoggedIn && <Route exact path='/login' element={<Login GoogleSignInButton={GoogleSignInButton} GoogleSignOutButton={GoogleSignOutButton} isLoggedIn={isLoggedIn} />}/> }
-            {isLoggedIn && (
-                <>
-                    <Route exact path='/' element={<Home user={user} setUser={setUser}/>} />
-                    <Route exact path='/analyzer' element={<Analyzer user={user} />} />
-                </>
-            )}
+            <Route exact path='/' element={<PrivateRoute isLoggedIn={isLoggedIn} isLoading={isLoading} component={Home}/>}>
+                <Route exact path='/' element={<Home user={user} setUser={setUser}/>}/>
+            </Route>
+
+            <Route exact path='/analyzer' element={<PrivateRoute isLoggedIn={isLoggedIn} isLoading={isLoading} component={Home}/>}>
+                <Route exact path='/analyzer' element={<Analyzer user={user}/>}/>
+            </Route>
+
+            <Route
+                path='/login'
+                element={
+                isLoggedIn ? (
+                    <Navigate to="/" />
+                ) : (
+                    <Login GoogleSignInButton={GoogleSignInButton} GoogleSignOutButton={GoogleSignOutButton} isLoggedIn={isLoggedIn} />
+                )
+                }
+            />
+          
+          <Route exact path='*' element={<PrivateRoute isLoggedIn={isLoggedIn} isLoading={isLoading} component={PageNotFound}/>}>
+                <Route path='*' element={<PageNotFound />} />
+            </Route>
         </Routes>
       </AnalyzeResumeProvider>
     </div>
