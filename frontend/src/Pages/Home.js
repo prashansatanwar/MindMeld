@@ -69,9 +69,7 @@ function Home({user, setUser}) {
     await getUser(user.googleId).then((res) => {
       setUser(res);
       localStorage.setItem('userData',JSON.stringify(res));
-    })
-
-    
+    })    
   }
 
   function handleAnalyze() {
@@ -86,19 +84,19 @@ function Home({user, setUser}) {
   }
   
   return (
-    <div className='bg-slate-950 text-white h-screen w-full flex justify-center items-center flex flex-col py-20'>
+    <div className='bg-slate-950 text-white h-screen w-full flex justify-center items-center flex flex-col py-10 sm:pt-24 sm:pb-4 md:py-20 overflow-y-auto'>
       <AlertUser open={alertOpen} setOpen={setAlertOpen} message={alertMessage} severity={alertSeverity}/>
-      <div className='text-8xl uppercase font-bold p-2 m-2 mb-8 tracking-widest font-megrim'>
+      <div className='text-4xl sm:text-6xl md:text-7xl lg:text-8xl uppercase font-bold p-2 mt-20 mb-8 tracking-widest font-megrim'>
         Mind Meld
       </div>
 
       <div className='w-[90%] flex flex-col h-full rounded-lg p-4 bg-slate-700 '>
-          <div className='flex mb-4'>
-            <form className='flex-grow flex' onSubmit={handleSubmit}>
-              <div className='flex-grow flex'>
+          <div className='flex mb-4 flex-col sm:flex-row text-sm sm:text-base'>
+            <form className='flex-grow flex ' onSubmit={handleSubmit}>
+              <div className='flex-grow flex '>
 
                 <input type='file' accept='pdf' className='custom-file-input' id='file-input' onChange={handleFileChange} />
-                <label title='Select another pdf file' className="custom-file-label border-2 border-blue-800 bg-blue-800 hover:bg-blue-900 p-2 m-2 rounded-lg" htmlFor="file-input">
+                <label title='Select another pdf file' className="custom-file-label xsm:w-full sm:w-auto border-2 border-blue-800 bg-blue-800 hover:bg-blue-900 p-2 m-2 rounded-lg" htmlFor="file-input">
                   <svg
                     aria-hidden="true"
                     focusable="false"
@@ -125,10 +123,10 @@ function Home({user, setUser}) {
 
               {file && (
                 <div className='m-2 ml-auto'>
-                  <button className='border-2 border-yellow-700 uppercase font-bold text-sm p-2 px-4 rounded-lg hover:bg-yellow-800 mx-2'
+                  <button className='border-2 border-yellow-700 uppercase font-bold text-xs sm:text-sm p-2 px-4 rounded-lg hover:bg-yellow-800 mx-2'
                           onClick={handleBack}> Back </button>
                   <button type='submit' 
-                    className='border-2 border-green-700 uppercase font-bold text-sm p-2 px-4 rounded-lg hover:bg-green-800'>
+                    className='border-2 border-green-700 uppercase font-bold text-xs sm:text-sm p-2 px-4 rounded-lg hover:bg-green-800'>
                       upload
                   </button>
                 </div>
@@ -137,15 +135,15 @@ function Home({user, setUser}) {
 
               {uploadedFile && !file && (
                 <button
-                  className='border-2 border-green-800 uppercase font-bold text-sm p-2 px-4 rounded-lg bg-green-800 hover:bg-green-900 m-2 ml-auto'
+                  className='border-2 border-green-800 uppercase font-bold text-xs sm:text-sm p-2 px-4 rounded-lg bg-green-800 hover:bg-green-900 m-2 sm:ml-auto'
                   onClick={handleAnalyze} > 
                     Analyze Resume 
                 </button>
               )}
           </div>
 
-          <div className='flex-grow h-full text-left text-white'>
-              <div className='bg-slate-800 h-full p-2 rounded'>
+          <div className='flex-grow h-full text-left text-white overflow-y-auto'>
+              <div className='bg-slate-800 h-full md:p-2 rounded'>
                 {
                   isLoading 
                     ? <div className='h-full w-full flex items-center justify-center'><Loading/></div>

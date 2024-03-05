@@ -93,7 +93,7 @@ function App() {
       return (
           <GoogleLogout
             render={renderProps => (
-                <button className='uppercase font-bold text-sm py-1 px-2 border-2 border-red-800 rounded bg-red-800 hover:bg-red-900'
+                <button className='uppercase font-bold text-xs sm:text-sm md:text-base p-1 md:px-2 border-2 border-red-800 rounded bg-red-800 hover:bg-red-900'
                         onClick={renderProps.onClick}>
                     Logout
                 </button>

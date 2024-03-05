@@ -52,6 +52,41 @@ function Analyzer({user}) {
         const newAnswers = [...answers];
         newAnswers[index] = value;
         setAnswers(newAnswers);
+
+        const textarea = document.getElementById(`textarea-${index}`);
+        const current = document.getElementById(`current-${index}`);
+        const maximum = document.getElementById(`maximum-${index}`);
+        const theCount = document.getElementById(`the-count-${index}`);
+
+        textarea.addEventListener('input', function() {
+            var characterCount = this.value.length;
+            current.textContent = characterCount;
+
+            if (characterCount < 500) {
+                current.style.color = '#fff';
+            }
+            if (characterCount > 500 && characterCount < 1100) {
+                current.style.color = '#FFAF00';
+            }
+            if (characterCount > 1100 && characterCount < 1600) {
+                current.style.color = '#FF8300';
+            }
+            if (characterCount > 1600 && characterCount < 1750) {
+                current.style.color = '#FF4800';
+            }
+            if (characterCount > 1750 && characterCount < 1900) {
+                current.style.color = '#FF0000 ';
+            }
+            
+            if (characterCount >= 1900) {
+                maximum.style.color = '#FF0000 ';
+                current.style.color = '#FF0000 ';
+                theCount.style.fontWeight = 'bold';
+            } else {
+                maximum.style.color = '#fff';
+                theCount.style.fontWeight = 'normal';
+            }
+        });      
     };
 
     async function handleAnalyze() {
@@ -63,28 +98,29 @@ function Analyzer({user}) {
 
         await analyzeResponse(user.fileId, {'questions':questions, 'answers':answers}).then((res) => {
             setResponse(res.feedback);
-            console.log(res)
         })
 
         setAlertOpen(false);
         setIsLoading(false);
     }
 
-
     return (
         <>
         <AlertUser open={alertOpen} setOpen={setAlertOpen} message={alertMessage} severity={alertSeverity}/>
         {isLoading && (
-            <div className='absolute mt-20 overflow-hidden h-full w-full flex items-center justify-center bg-slate-950 opacity-50 '>
+            <div className='fixed mt-12 md:mt-18 overflow-hidden h-full w-full flex items-center justify-center bg-slate-950 opacity-50'>
                 <Loading/>
             </div>
         )}
-        <div className='bg-slate-950 text-white h-screen w-full flex flex-col p-4 pt-20 overflow overflow-y-scroll'>
+        <div className='bg-slate-950 text-white h-screen w-full flex flex-col p-4 pt-20 overflow overflow-y-auto text-sm md:text-base'>
             
-            <div className='text-4xl text-left p-4'> Hello, {user.name}</div>
+            <div className='text-xl sm:text-2xl md:text-4xl text-left p-4 font-bold'> Hello, {user.name}</div>
 
             <div className='p-4 text-left '>
-                <button onClick={getQ} className='border-2 border-green-700 bg-green-700 uppercase font-bold text-sm p-2 px-4 rounded-lg hover:bg-green-800 w-1/5 rounded'> Analyze Resume </button>
+                <button onClick={getQ} 
+                    className='border-2 border-green-700 bg-green-700 uppercase font-bold text-xs md:text-sm p-2 md:p-2 md:px-4 mb-4 rounded-lg hover:bg-green-800 md:w-1/4 rounded'> 
+                        Analyze Resume 
+                </button>
 
                 <div className='pt-4'>
                     
@@ -92,20 +128,28 @@ function Analyzer({user}) {
                             <ul>
                                 {questions.map((question, index) => (
                                     <li key={index}>
-                                        <div className='bg-slate-900 text-md pt-2 '>
+                                        <div className='bg-slate-900 text-md rounded p-2 font-semibold'>
                                             {question}
                                         </div>
-                                        <textarea
-                                            type='text'
-                                            className='w-full h-32 bg-slate-800'
-                                            placeholder=''
-                                            value={answers[index]}
-                                            onChange={(e) => handleAnswerChange(index, e.target.value)}
-                                        />
+                                        <div className='pb-2'>
+                                            <textarea
+                                                type='text'
+                                                className='w-full h-32 bg-slate-800 rounded p-2'
+                                                placeholder=''
+                                                value={answers[index]}
+                                                onChange={(e) => handleAnswerChange(index, e.target.value)}
+                                                maxLength='2000'
+                                                id={`textarea-${index}`}
+                                            />
+                                            <div id={`the-count-${index}`} className='pb-2 w-full text-right text-xs md:text-sm opacity-90 ' >
+                                                <span id={`current-${index}`}>0</span>
+                                                <span id={`maximum-${index}`}>/2000</span>
+                                            </div>
+                                        </div>
     
-                                        {response && (
-                                            <div className="p-4 text-left text-yellow-400">
-                                                <p>{response[index]}</p>
+                                        {response.length > 0 && response && (
+                                            <div className="p-2 pb-6 text-left text-xs sm:text-sm md:text-base text-yellow-400 rounded">
+                                                <p> » {response[index]}</p>
                                             </div>
                                         )}
     
@@ -114,15 +158,11 @@ function Analyzer({user}) {
                                     ))} 
                             </ul>
                         )}
-                
-                    
-                   
-
                 </div>
 
             </div>
             <div className='text-right'>
-                <button onClick={handleAnalyze} className={disable ? 'border-2 border-green-700 bg-green-700 uppercase font-bold text-sm p-2 px-4 rounded-lg hover:bg-green-800 w-1/5 rounded mx-2' : 'hidden'}> Analyze response </button>
+                <button onClick={handleAnalyze} className={disable ? 'border-2 border-green-700 bg-green-700 uppercase font-bold text-xs md:text-sm p-2 md:p-2 md:px-4 mb-4 rounded-lg hover:bg-green-800 md:w-1/4 rounded' : 'hidden'}> Analyze response </button>
             </div>
 
 
