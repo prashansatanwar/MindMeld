@@ -1,58 +1,75 @@
 import React, { useEffect, useState } from 'react'
-import { getQuestions, uploadFile, getFile, deleteFile, getUser } from '../Api';
-import Analyzer from './Analyzer';
+import { uploadFile, getFile, getUser } from '../Api';
 import { useNavigate } from 'react-router-dom';
 import { useAnalyzeResume } from '../Components/AnalyzeResumeContext';
 
+import Loading from "../Components/Loading";
+import AlertUser from "../Components/AlertUser";
+
 function Home({user, setUser}) {
   const [file, setFile] = useState(null);
-  const [uploadedFile, setUploadedFile] = useState();
-  const [url, setUrl] = useState('');
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [url, setUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState(null);
+  const [alertSeverity, setAlertSeverity] = useState(null);
 
   const navigate = useNavigate();
 
-  const {clickAnalyzeResume } = useAnalyzeResume();
+  const { clickAnalyzeResume } = useAnalyzeResume();
 
   function handleFileChange(e) {
-    setFile(e.target.files[0]);
+    const f = e.target.files[0];
+    if(!f?.name.endsWith('.pdf')) {
+      setAlertMessage('You can upload pdf files only.');
+      setAlertSeverity('warning')
+      setAlertOpen(true);
+      return;
+    }
+    setFile(f);
     setUploadedFile('');
   }
 
   useEffect(() => {
-      const fetchData = async () => {
-          if (user.fileId) {
-              try {
-                  const response = await getFile(user.googleId, user.fileId);
-                  setUploadedFile(response);
-              } catch (error) {
-                  console.error('Error fetching file:', error);
-              }
-          }
-      };
-
-      fetchData();
-
-      console.log(uploadedFile)
-  }, [user.fileId, user.googleId]);
-
+    setIsLoading(true);
+    file && setUrl(URL.createObjectURL(file)) 
+    setIsLoading(false);
+  }, [file]);
 
   useEffect(() => {
-    console.log(file)
-    file && setUrl(URL.createObjectURL(file))
-  }, [file]);
+    setIsLoading(true);
+      const fetchData = async () => {
+        if (user.fileId) {
+          try {
+            const response = await getFile(user.googleId, user.fileId);
+            setUploadedFile(response);
+          } catch (error) {
+            console.error('Error fetching file:', error);
+            setAlertMessage('Error fetching file.');
+            setAlertSeverity('error')
+            setAlertOpen(true);
+          }
+        }
+        setIsLoading(false);
+      };
+      
+      fetchData();
+  }, [user.fileId, user.googleId]);
 
   async function handleSubmit(e) {
     e.preventDefault();
     await uploadFile(file,user.googleId).then((res) => {
-      console.log(res)
       setFile('')
+      setAlertOpen(true);
+      setAlertMessage('File Uploaded');
+      setAlertSeverity('success');
     })
     await getUser(user.googleId).then((res) => {
       setUser(res);
       localStorage.setItem('userData',JSON.stringify(res));
-    })
-
-    
+    })    
   }
 
   function handleAnalyze() {
@@ -61,25 +78,25 @@ function Home({user, setUser}) {
   }
 
   function handleBack() {
-    setFile('');
+    setFile(null);
+    setUrl(null);
     window.location.reload();
   }
   
   return (
-    <div className='bg-slate-950 text-white h-screen w-full flex justify-center items-center flex flex-col py-20'>
-      <div className='text-8xl uppercase font-bold p-2 m-2 mb-8 tracking-widest font-megrim'>
-
+    <div className='bg-slate-950 text-white h-screen w-full flex justify-center items-center flex flex-col py-10 sm:pt-24 sm:pb-4 md:py-20 overflow-y-auto'>
+      <AlertUser open={alertOpen} setOpen={setAlertOpen} message={alertMessage} severity={alertSeverity}/>
+      <div className='text-4xl sm:text-6xl md:text-7xl lg:text-8xl uppercase font-bold p-2 mt-20 mb-8 tracking-widest font-megrim'>
         Mind Meld
-      
       </div>
 
       <div className='w-[90%] flex flex-col h-full rounded-lg p-4 bg-slate-700 '>
-          <div className='flex mb-4'>
-            <form className='flex-grow flex' onSubmit={handleSubmit}>
-              <div className='flex-grow flex'>
+          <div className='flex mb-4 flex-col sm:flex-row text-sm sm:text-base'>
+            <form className='flex-grow flex ' onSubmit={handleSubmit}>
+              <div className='flex-grow flex '>
 
                 <input type='file' accept='pdf' className='custom-file-input' id='file-input' onChange={handleFileChange} />
-                <label className="custom-file-label border-2 border-blue-800 bg-blue-800 hover:bg-blue-900 px-2 m-2 rounded-lg" for="file-input">
+                <label title='Select another pdf file' className="custom-file-label xsm:w-full sm:w-auto border-2 border-blue-800 bg-blue-800 hover:bg-blue-900 p-2 m-2 rounded-lg" htmlFor="file-input">
                   <svg
                     aria-hidden="true"
                     focusable="false"
@@ -99,17 +116,17 @@ function Home({user, setUser}) {
                   {uploadedFile 
                     ? <span> {uploadedFile.filename }</span>
                     : file
-                    ? <span> {file.name} </span>
-                    : <span> Choose PDF file </span>}
+                      ? <span> {file.name} </span>
+                      : <span> Choose PDF file </span>}
                 </label>
               </div>
 
               {file && (
                 <div className='m-2 ml-auto'>
-                  <button className='border-2 border-yellow-700 uppercase font-bold text-sm p-2 px-4 rounded-lg hover:bg-yellow-800 mx-2'
+                  <button className='border-2 border-yellow-700 uppercase font-bold text-xs sm:text-sm p-2 px-4 rounded-lg hover:bg-yellow-800 mx-2'
                           onClick={handleBack}> Back </button>
                   <button type='submit' 
-                    className='border-2 border-green-700 uppercase font-bold text-sm p-2 px-4 rounded-lg hover:bg-green-800'>
+                    className='border-2 border-green-700 uppercase font-bold text-xs sm:text-sm p-2 px-4 rounded-lg hover:bg-green-800'>
                       upload
                   </button>
                 </div>
@@ -118,20 +135,25 @@ function Home({user, setUser}) {
 
               {uploadedFile && !file && (
                 <button
-                  className='border-2 border-green-800 uppercase font-bold text-sm p-2 px-4 rounded-lg bg-green-800 hover:bg-green-900 m-2 ml-auto'
+                  className='border-2 border-green-800 uppercase font-bold text-xs sm:text-sm p-2 px-4 rounded-lg bg-green-800 hover:bg-green-900 m-2 sm:ml-auto'
                   onClick={handleAnalyze} > 
                     Analyze Resume 
                 </button>
               )}
           </div>
 
-          <div className='flex-grow h-full text-left text-white'>
-              <div className='bg-slate-800 h-full p-2 rounded'>
-                {uploadedFile 
-                  ? <iframe src={`data:application/pdf;base64,${uploadedFile.content}`} className='h-full w-full' />
-                  : (url 
-                    ? <iframe src={url} className='h-full w-full' />
-                    : <div> No file chosen or uploaded. </div>)}
+          <div className='flex-grow h-full text-left text-white overflow-y-auto'>
+              <div className='bg-slate-800 h-full md:p-2 rounded'>
+                {
+                  isLoading 
+                    ? <div className='h-full w-full flex items-center justify-center'><Loading/></div>
+                    : uploadedFile 
+                      ? <iframe src={`data:application/pdf;base64,${uploadedFile.content}`} className='h-full w-full' />
+                      : (url
+                        ? <iframe src={url} className='h-full w-full' />
+                        : <div> No file chosen or uploaded. </div>)
+
+                }
               </div>
           </div>
 
