@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAnalyzeResume } from '../Components/AnalyzeResumeContext';
 
 import Loading from "../Components/Loading";
+import AlertUser from "../Components/AlertUser";
 
 function Home({user, setUser}) {
   const [file, setFile] = useState(null);
@@ -11,12 +12,23 @@ function Home({user, setUser}) {
   const [url, setUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState(null);
+  const [alertSeverity, setAlertSeverity] = useState(null);
+
   const navigate = useNavigate();
 
-  const {clickAnalyzeResume } = useAnalyzeResume();
+  const { clickAnalyzeResume } = useAnalyzeResume();
 
   function handleFileChange(e) {
-    setFile(e.target.files[0]);
+    const f = e.target.files[0];
+    if(!f?.name.endsWith('.pdf')) {
+      setAlertMessage('You can upload pdf files only.');
+      setAlertSeverity('warning')
+      setAlertOpen(true);
+      return;
+    }
+    setFile(f);
     setUploadedFile('');
   }
 
@@ -35,20 +47,24 @@ function Home({user, setUser}) {
             setUploadedFile(response);
           } catch (error) {
             console.error('Error fetching file:', error);
+            setAlertMessage('Error fetching file.');
+            setAlertSeverity('error')
+            setAlertOpen(true);
           }
         }
         setIsLoading(false);
       };
       
       fetchData();
-      console.log('after fetching data',isLoading)
   }, [user.fileId, user.googleId]);
 
   async function handleSubmit(e) {
     e.preventDefault();
     await uploadFile(file,user.googleId).then((res) => {
-      console.log(res)
       setFile('')
+      setAlertOpen(true);
+      setAlertMessage('File Uploaded');
+      setAlertSeverity('success');
     })
     await getUser(user.googleId).then((res) => {
       setUser(res);
@@ -71,10 +87,9 @@ function Home({user, setUser}) {
   
   return (
     <div className='bg-slate-950 text-white h-screen w-full flex justify-center items-center flex flex-col py-20'>
+      <AlertUser open={alertOpen} setOpen={setAlertOpen} message={alertMessage} severity={alertSeverity}/>
       <div className='text-8xl uppercase font-bold p-2 m-2 mb-8 tracking-widest font-megrim'>
-
         Mind Meld
-      
       </div>
 
       <div className='w-[90%] flex flex-col h-full rounded-lg p-4 bg-slate-700 '>
@@ -83,7 +98,7 @@ function Home({user, setUser}) {
               <div className='flex-grow flex'>
 
                 <input type='file' accept='pdf' className='custom-file-input' id='file-input' onChange={handleFileChange} />
-                <label className="custom-file-label border-2 border-blue-800 bg-blue-800 hover:bg-blue-900 px-2 m-2 rounded-lg" htmlFor="file-input">
+                <label title='Select another pdf file' className="custom-file-label border-2 border-blue-800 bg-blue-800 hover:bg-blue-900 p-2 m-2 rounded-lg" htmlFor="file-input">
                   <svg
                     aria-hidden="true"
                     focusable="false"

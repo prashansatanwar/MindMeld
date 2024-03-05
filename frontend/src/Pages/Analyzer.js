@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { analyzeResponse, getQuestions } from '../Api';
 import { useAnalyzeResume } from '../Components/AnalyzeResumeContext';
 import Loading from '../Components/Loading';
+import AlertUser from '../Components/AlertUser';
 
 function Analyzer({user}) {
     const [questions, setQuestions] = useState([]);
@@ -10,6 +11,11 @@ function Analyzer({user}) {
     const [disable, setDisable] = useState(false);
 
     const [isLoading, setIsLoading] = useState(false);
+
+    const [alertOpen, setAlertOpen] = useState(false);
+    const [alertMessage, setAlertMessage] = useState(null);
+    const [alertSeverity, setAlertSeverity] = useState(null);
+
 
     
   const isEffectTriggered = useRef(false);
@@ -26,12 +32,18 @@ function Analyzer({user}) {
 
     async function getQ() {
         setIsLoading(true);
+
+        setAlertMessage('Analyzing Resume');
+        setAlertSeverity('info');
+        setAlertOpen(true);
+
         await getQuestions(user.googleId, user.fileId).then((res) => {
             setQuestions(res.questions);
             setAnswers(Array(questions.length).fill(''))
             setResponse([]);
         })
 
+        setAlertOpen(false);
         setDisable(true);
         setIsLoading(false);
     }
@@ -44,16 +56,24 @@ function Analyzer({user}) {
 
     async function handleAnalyze() {
         setIsLoading(true);
+
+        setAlertMessage('Analyzing Response');
+        setAlertSeverity('info');
+        setAlertOpen(true);
+
         await analyzeResponse(user.fileId, {'questions':questions, 'answers':answers}).then((res) => {
             setResponse(res.feedback);
             console.log(res)
         })
+
+        setAlertOpen(false);
         setIsLoading(false);
     }
 
 
     return (
         <>
+        <AlertUser open={alertOpen} setOpen={setAlertOpen} message={alertMessage} severity={alertSeverity}/>
         {isLoading && (
             <div className='absolute mt-20 overflow-hidden h-full w-full flex items-center justify-center bg-slate-950 opacity-50 '>
                 <Loading/>
