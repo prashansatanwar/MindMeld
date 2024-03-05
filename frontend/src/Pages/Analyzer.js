@@ -32,6 +32,13 @@ function Analyzer({user}) {
 
     async function getQ() {
         setIsLoading(true);
+        if(!user.fileId) {
+            setAlertMessage('No Resume Found');
+            setAlertSeverity('error');
+            setAlertOpen(true);
+            setIsLoading(false);
+            return;
+        }
 
         setAlertMessage('Analyzing Resume');
         setAlertSeverity('info');
